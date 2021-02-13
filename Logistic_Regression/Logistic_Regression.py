@@ -1,4 +1,6 @@
 import numpy as np
+import csv
+import time
 
 
 class Logistic_Regression:
@@ -6,8 +8,9 @@ class Logistic_Regression:
     def __init__(self, fileName):
         self.fileName = fileName
         self.tolerance = 1e-5
-        self.train_percentages = [1, 0.7, 0.6, 0.5]
-        self.cross_fold_values = [5, 10, 15]
+        self.train_percentages = [0.6]
+        self.cross_fold_values = [5]
+        self.statistics = []
 
     def dataLoad(self, fileName):
         print(f'Loading file {fileName}')
@@ -25,7 +28,7 @@ class Logistic_Regression:
         number_of_rows = data.shape[0]
         first_column = np.ones([number_of_rows])
         data = np.insert(data, 0, first_column, axis=1)
-        print(f'Added a new X0 column {data.shape}')
+        # print(f'Added a new X0 column {data.shape}')
         return data
 
     def dataNorm(self, data):
@@ -45,7 +48,7 @@ class Logistic_Regression:
             normalized_column = (v - minimum_value) / (denominator)
             data[:, i] = normalized_column
 
-        print(f'Normalized data with X0 column {data.shape}')
+        # print(f'Normalized data with X0 column {data.shape}')
 
         return data
 
@@ -143,6 +146,15 @@ class Logistic_Regression:
         print(f"Number of runs {number_of_runs}")
         return self.weights.reshape((len(self.weights), 1))
 
+    def trainandTest(self, X_Train, X_Test):
+        classifier = Logistic_Regression("")
+        data = classifier.dataNorm(X_Train)
+        test_data = classifier.dataNorm(X_Test)
+        theta = np.zeros((data.shape[1]-1, 1))
+        theta = classifier.stochasticGD(data, theta, 0.01, len(X_Train)*20)
+        y_prediction_cls, accuracy = classifier.predict(test_data, theta)
+        return accuracy, y_prediction_cls
+
     def splitTT(self, X, percentTrain):
         """
         Takes in the normalized dataset X_norm , and the expected portion
@@ -170,7 +182,7 @@ class Logistic_Regression:
         split_array = np.array_split(X, folds)
         return split_array
 
-    def k_fold_cross_validation(self, X, k, folds):
+    def k_fold_cross_validation(self, X, folds):
         """
         Takes in the Normalized array and number of k-values needed and the number of folds needed.
         The function would iterate over all the fold partitions except the fold in enumeration 
@@ -192,14 +204,36 @@ class Logistic_Regression:
             total_train_list = list_of_items_from_zero_to_index + \
                 list_of_items_from_index_to_end
             train_data_set = np.vstack(total_train_list)
-            accuracy_for_cross_validation, actual_predicted_labels_from_partition = knn(
-                train_data_set, cross_validation_dataset, k)
+            accuracy_for_cross_validation, actual_predicted_labels_from_partition = self.trainandTest(
+                train_data_set, cross_validation_dataset)
             accuracy_listing.append(accuracy_for_cross_validation)
             actual_predicted_labels.append(
                 actual_predicted_labels_from_partition)
-
+        print(f'Accuracy Listing {accuracy_listing}')
         accuracy_average = np.average(accuracy_listing)
 
         print(
-            f'k-value :{k}, Folds : {folds}, Accuracy Average : {accuracy_average} ')
+            f'Folds : {folds}, Accuracy Average : {accuracy_average} ')
         return accuracy_average, actual_predicted_labels
+
+    def trigger_k_fold_cross_validation(self, X):
+        for train_percentage in self.train_percentages:
+            print('*'*20)
+            print(f' Training with {train_percentage*100} % data')
+            print('-'*10)
+            x_train, x_test = self.splitTT(X, train_percentage)
+            accuracy_listing = []
+            for cross_fold in self.cross_fold_values:
+                tic = time.perf_counter()
+                accuracy_cross_fold, actual_predicted_labels = self.k_fold_cross_validation(
+                    x_train, cross_fold)
+                toc = time.perf_counter()
+                time_taken = toc - tic
+                accuracy_listing.append(accuracy_cross_fold)
+                datapoint = ('Logistic Regression', train_percentage *
+                             100, cross_fold, accuracy_cross_fold, time_taken)
+                self.statistics.append((datapoint))
+
+            average_accuracy_score = np.mean(accuracy_listing)
+            print(
+                f' Average accuracy for all cross folds : {average_accuracy_score}')

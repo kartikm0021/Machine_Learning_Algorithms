@@ -6,8 +6,8 @@ data_file_name = 'supporting_files/shuffled.data'
 
 classifier = logistic.Logistic_Regression(data_file_name)
 
-data = classifier.dataLoad(data_file_name)
-data = classifier.dataNorm(data)
+base_data = classifier.dataLoad(data_file_name)
+data = classifier.dataNorm(base_data)
 classifier.printMeanAndSum(data)
 theta = np.zeros((data.shape[1]-1, 1))
 
@@ -18,6 +18,10 @@ theta = classifier.stochasticGD(data, theta, 0.01, 1372*20)
 y_prediction_cls, accuracy = classifier.predict(data, theta)
 print(accuracy)
 
+
+# K Fold cross validation
+print('Starting k fold cross validation')
+classifier.trigger_k_fold_cross_validation(base_data)
 
 # data_file_name = 'data/data_banknote_authentication-copy.txt'
 # classifier = logistic.Logistic_Regression(data_file_name)
