@@ -5,6 +5,7 @@ class Logistic_Regression:
 
     def __init__(self, fileName):
         self.fileName = fileName
+        self.tolerance = 1e-5
 
     def dataLoad(self, fileName):
         print(f'Loading file {fileName}')
@@ -64,3 +65,93 @@ class Logistic_Regression:
             column_number = 'Col' + str(i+1)
             row = [column_number, attribute_names[i],  mean_value, sum_value]
             print(format_row.format('', *row))
+
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
+
+    def errCompute(self, X, weights):
+        x = X[:, :-1]
+        y = X[:, -1]
+        n = X.shape[0]
+        z = x@weights
+        yhat = self.sigmoid(z)
+
+        predict_1 = y * np.log(yhat)
+        predict_0 = (1 - y) * np.log(1 - yhat)
+        summation = np.mean(-(predict_1 + predict_0))
+        return summation
+
+    def fit(self, X, learning_rate, epoch):
+        n_samples, n_features = X.shape
+        self.weights = np.zeros(n_features)
+        x = X[:, :-1]
+        y = X[:, -1]
+
+        # gradient descent
+        for _ in range(epoch):
+            z = x@self.weights
+            yhat = self.sigmoid(z)
+            dw = (1/n_samples) * np.dot(x.T, (yhat - y))
+            self.weights -= learning_rate * dw
+
+    def gradient_descent(self, X, learning_rate):
+        n_samples, n_features = X.shape
+        x = X[:, :-1]
+        y = X[:, -1]
+
+        z = x@self.weights
+        yhat = self.sigmoid(z).reshape(n_samples)
+        dw = (1/n_samples) * np.dot(x.T, (yhat - y))
+        self.weights -= learning_rate * dw
+
+    def predict(self, X):
+        x = X[:, :-1]
+        y = X[:, -1]
+        z = x@self.weights
+        y_prediction = self.sigmoid(z)
+        y_prediction_cls = [1 if i > 0.5 else 0 for i in y_prediction]
+        accuracy = self.accuracy(y, y_prediction_cls)
+        return y_prediction_cls, accuracy
+
+    def accuracy(self, y_true, y_prediction):
+        accuracy = np.sum(y_true == y_prediction) / len(y_true)
+        return accuracy
+
+    def stochasticGD(self, X, weights, learning_rate, epoch):
+        previous_loss = -float('inf')
+        n_samples, n_features = X.shape
+        self.weights = weights  # np.zeros(n_features-1)
+        converged = False
+        number_of_runs = 0
+        for _ in range(epoch):
+
+            loss = self.errCompute(X, weights)
+            number_of_runs += 1
+            # convergence check
+            if abs(previous_loss - loss) < self.tolerance:
+                converged = True
+                break
+            else:
+                previous_loss = loss
+            self.gradient_descent(X, learning_rate)
+        print(f"Number of runs {number_of_runs}")
+        return self.weights
+
+    # def stochasticGD(self, X, weights, learning_rate, epoch):
+    #     loss = []
+    #     previous_loss = -float('inf')
+    #     self.converged = False
+    #     x = X[:, :-1]
+    #     y = X[:, -1]
+    #     n = X.shape[0]
+
+    #     for iteration in range(epoch):
+    #         z = x@weights
+    #         yhat = self.sigmoid(z)
+    #         print(yhat)
+    #         weights -= learning_rate * np.dot(x.T,  (yhat - y))
+    #         loss.append(self.errCompute(X, weights))
+    #     self.weights = weights
+    #     self.loss = loss
+
+    #     return self.weights
