@@ -236,4 +236,6 @@ class Logistic_Regression:
 
             average_accuracy_score = np.mean(accuracy_listing)
             print(
-                f' Average accuracy for all cross folds : {average_accuracy_score}')
+                f' Average accuracy for all cross folds : {average_accuracy_score:.3f}')
+            print('Mean Accuracy: ' +
+                  "{:.2f}".format(average_accuracy_score*100)+'%')
