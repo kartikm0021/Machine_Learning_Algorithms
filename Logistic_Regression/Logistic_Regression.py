@@ -104,10 +104,10 @@ class Logistic_Regression:
         dw = (1/n_samples) * np.dot(x.T, (yhat - y))
         self.weights -= learning_rate * dw
 
-    def predict(self, X):
+    def predict(self, X, weight):
         x = X[:, :-1]
         y = X[:, -1]
-        z = x@self.weights
+        z = x@weight  # self.weights
         y_prediction = self.sigmoid(z)
         y_prediction_cls = [1 if i > 0.5 else 0 for i in y_prediction]
         accuracy = self.accuracy(y, y_prediction_cls)
@@ -129,13 +129,14 @@ class Logistic_Regression:
             number_of_runs += 1
             # convergence check
             if abs(previous_loss - loss) < self.tolerance:
+                print(f'Within tolerace limit of {self.tolerance}')
                 converged = True
                 break
             else:
                 previous_loss = loss
             self.gradient_descent(X, learning_rate)
         print(f"Number of runs {number_of_runs}")
-        return self.weights
+        return self.weights.reshape((len(self.weights), 1))
 
     # def stochasticGD(self, X, weights, learning_rate, epoch):
     #     loss = []
