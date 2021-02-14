@@ -7,6 +7,7 @@ data_file_name = 'supporting_files/shuffled.data'
 classifier = logistic.Logistic_Regression(data_file_name)
 
 base_data = classifier.dataLoad(data_file_name)
+print(f'Data shape {base_data.shape}')
 data = classifier.dataNorm(base_data)
 classifier.printMeanAndSum(data)
 theta = np.zeros((data.shape[1]-1, 1))
