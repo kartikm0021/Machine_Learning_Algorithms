@@ -10,7 +10,8 @@ class Logistic_Regression:
         self.tolerance = 1e-5
         self.train_percentages = [0.6]
         self.cross_fold_values = [5]
-        self.learning_rates = [.01, .02, .03, 1, 2, 3, 4, 5]
+        # self.learning_rates = [.01, .02, .03, 1, 2, 3, 4, 5]
+        self.learning_rates = [10]
         self.statistics = []
 
     def dataLoad(self, fileName):
@@ -147,12 +148,35 @@ class Logistic_Regression:
         print(f"Number of runs {number_of_runs}")
         return self.weights.reshape((len(self.weights), 1))
 
+    def stochasticMiniBatchGradientDescent(self, X, weights, learning_rate, max_iter):
+
+        weights = weights.reshape(len(weights))
+        self.weights = weights
+        previous_loss = -float('inf')
+        iterations = 0
+        folds = 100
+
+        for _ in range(max_iter):
+
+            k_fold_partitions = self.splitCV(X, folds)
+            for index, item in enumerate(k_fold_partitions):
+                self.gradient_descent(item, learning_rate)
+            loss = self.errCompute(X, weights)
+            if abs(previous_loss - loss) < self.tolerance:
+                print(f'Within tolerace limit of {self.tolerance}')
+                break
+            else:
+                previous_loss = loss
+            iterations += 1
+        print(f"Number of runs {iterations}")
+        return self.weights.reshape((len(self.weights), 1))
+
     def trainandTest(self, X_Train, X_Test, learning_rate):
         classifier = Logistic_Regression("")
         data = classifier.dataNorm(X_Train)
         test_data = classifier.dataNorm(X_Test)
         theta = np.zeros((data.shape[1]-1, 1))
-        theta = classifier.stochasticGD(
+        theta = classifier.stochasticMiniBatchGradientDescent(
             data, theta, learning_rate, len(X_Train)*20)
         y_prediction_cls, accuracy = classifier.predict(test_data, theta)
         return accuracy, y_prediction_cls, theta
