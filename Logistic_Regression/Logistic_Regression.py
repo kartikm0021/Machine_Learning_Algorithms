@@ -155,6 +155,7 @@ class Logistic_Regression:
         previous_loss = -float('inf')
         iterations = 0
         folds = 200
+        error_rates = []
 
         for _ in range(max_iter):
 
@@ -162,6 +163,7 @@ class Logistic_Regression:
             for index, item in enumerate(k_fold_partitions):
                 self.gradient_descent(item, learning_rate)
             loss = self.errCompute(X, weights)
+            error_rates.append(loss)
             if abs(previous_loss - loss) < self.tolerance:
                 # print(f'Within tolerace limit of {self.tolerance}')
                 break
@@ -170,6 +172,7 @@ class Logistic_Regression:
             iterations += 1
         print(f"Number of runs {iterations}")
         self.iterations = iterations
+        self.error_rates = error_rates
         return self.weights.reshape((len(self.weights), 1))
 
     def trainandTest(self, X_Train, X_Test, learning_rate):
@@ -180,9 +183,10 @@ class Logistic_Regression:
         theta = classifier.stochasticMiniBatchGradientDescent(
             data, theta, learning_rate, len(X_Train)*20)
         epoch = classifier.iterations
-        print(f'epoch: {epoch}')
+        error_rates = classifier.error_rates
+
         y_prediction_cls, accuracy = classifier.predict(test_data, theta)
-        return accuracy, y_prediction_cls, theta, epoch
+        return accuracy, y_prediction_cls, theta, epoch, error_rates
 
     def splitTT(self, X, percentTrain):
         """
@@ -234,11 +238,13 @@ class Logistic_Regression:
             total_train_list = list_of_items_from_zero_to_index + \
                 list_of_items_from_index_to_end
             train_data_set = np.vstack(total_train_list)
-            accuracy_for_cross_validation, actual_predicted_labels_from_partition, theta, epochs = self.trainandTest(
+            accuracy_for_cross_validation, actual_predicted_labels_from_partition, theta, epochs, error_rates = self.trainandTest(
                 train_data_set, cross_validation_dataset, learning_rate)
             print(f'Thetha is : {theta}')
+            print(f'Error rate length : {len(error_rates)}')
+            print(f'Error Rates : {error_rates}')
             weights_accuracy_vector.append(
-                (index, accuracy_for_cross_validation, theta, epochs))
+                (index, accuracy_for_cross_validation, theta, epochs, error_rates))
             accuracy_listing.append(accuracy_for_cross_validation)
             actual_predicted_labels.append(
                 actual_predicted_labels_from_partition)
