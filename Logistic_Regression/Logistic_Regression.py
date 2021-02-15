@@ -11,7 +11,7 @@ class Logistic_Regression:
         self.train_percentages = [0.6]
         self.cross_fold_values = [5]
         # self.learning_rates = [.01, .02, .03, 1, 2, 3, 4, 5]
-        self.learning_rates = [10]
+        self.learning_rates = [.1, .2, .3, .4, 1, 2, 3]
         self.statistics = []
 
     def dataLoad(self, fileName):
@@ -154,7 +154,7 @@ class Logistic_Regression:
         self.weights = weights
         previous_loss = -float('inf')
         iterations = 0
-        folds = 100
+        folds = 200
 
         for _ in range(max_iter):
 
@@ -163,12 +163,13 @@ class Logistic_Regression:
                 self.gradient_descent(item, learning_rate)
             loss = self.errCompute(X, weights)
             if abs(previous_loss - loss) < self.tolerance:
-                print(f'Within tolerace limit of {self.tolerance}')
+                # print(f'Within tolerace limit of {self.tolerance}')
                 break
             else:
                 previous_loss = loss
             iterations += 1
         print(f"Number of runs {iterations}")
+        self.iterations = iterations
         return self.weights.reshape((len(self.weights), 1))
 
     def trainandTest(self, X_Train, X_Test, learning_rate):
@@ -178,8 +179,10 @@ class Logistic_Regression:
         theta = np.zeros((data.shape[1]-1, 1))
         theta = classifier.stochasticMiniBatchGradientDescent(
             data, theta, learning_rate, len(X_Train)*20)
+        epoch = classifier.iterations
+        print(f'epoch: {epoch}')
         y_prediction_cls, accuracy = classifier.predict(test_data, theta)
-        return accuracy, y_prediction_cls, theta
+        return accuracy, y_prediction_cls, theta, epoch
 
     def splitTT(self, X, percentTrain):
         """
@@ -220,6 +223,7 @@ class Logistic_Regression:
         :folds: number of folds for which knn needs to be done.
         :return: accuracy of this iteration and list of predicted outputs
         """
+        weights_accuracy_vector = []
         accuracy_listing = []
         actual_predicted_labels = []
         k_fold_partitions = self.splitCV(X, folds)
@@ -230,8 +234,11 @@ class Logistic_Regression:
             total_train_list = list_of_items_from_zero_to_index + \
                 list_of_items_from_index_to_end
             train_data_set = np.vstack(total_train_list)
-            accuracy_for_cross_validation, actual_predicted_labels_from_partition, theta = self.trainandTest(
+            accuracy_for_cross_validation, actual_predicted_labels_from_partition, theta, epochs = self.trainandTest(
                 train_data_set, cross_validation_dataset, learning_rate)
+            print(f'Thetha is : {theta}')
+            weights_accuracy_vector.append(
+                (index, accuracy_for_cross_validation, theta, epochs))
             accuracy_listing.append(accuracy_for_cross_validation)
             actual_predicted_labels.append(
                 actual_predicted_labels_from_partition)
@@ -240,7 +247,7 @@ class Logistic_Regression:
 
         print(
             f'Folds : {folds}, Accuracy Average : {accuracy_average} ')
-        return accuracy_average, actual_predicted_labels
+        return accuracy_average, actual_predicted_labels, weights_accuracy_vector
 
     def trigger_k_fold_cross_validation(self, X):
         for train_percentage in self.train_percentages:
@@ -252,13 +259,13 @@ class Logistic_Regression:
             for cross_fold in self.cross_fold_values:
                 for learning_rate in self.learning_rates:
                     tic = time.perf_counter()
-                    accuracy_cross_fold, actual_predicted_labels = self.k_fold_cross_validation(
+                    accuracy_cross_fold, actual_predicted_labels, weights_accuracy_vector = self.k_fold_cross_validation(
                         x_train, cross_fold, learning_rate)
                     toc = time.perf_counter()
                     time_taken = toc - tic
                     accuracy_listing.append(accuracy_cross_fold)
                     datapoint = ('Logistic Regression', train_percentage *
-                                 100, learning_rate, cross_fold, accuracy_cross_fold, time_taken)
+                                 100, learning_rate, cross_fold, accuracy_cross_fold, time_taken, weights_accuracy_vector)
                     self.statistics.append((datapoint))
 
             average_accuracy_score = np.mean(accuracy_listing)
@@ -267,4 +274,29 @@ class Logistic_Regression:
             print('Mean Accuracy: ' +
                   "{:.2f}".format(average_accuracy_score*100)+'%')
         print('Statistics')
-        print(self.statistics)
+        # print(self.statistics)
+        self.print_statistics(self.statistics)
+
+    def print_statistics(self, statistics):
+        """
+        Print the statistics to be used for subsequent analysis in jupyter notebook for drawing charts.
+        :statistics: nd array of tuples.
+        """
+        with open('report/data/statistics.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Method", "Train_Percentage",
+                             "learning_Rate", "Cross_Validation_Fold", "Accuracy", "Epochs", "Bias", "Variance", "Skewness", "Kurtosis", "Entropy"])
+            for index, stat in enumerate(statistics):
+                for index2, weight_vector in enumerate(stat[6]):
+                    weights_array_vector = weight_vector[2].reshape(
+                        len(weight_vector[2]))
+                    accuracy = weight_vector[1]
+                    epochs = weight_vector[3]
+                    cross_fold = weight_vector[0]
+                    bias = weights_array_vector[0]
+                    Variance = weights_array_vector[1]
+                    Skewness = weights_array_vector[2]
+                    Kurtosis = weights_array_vector[3]
+                    Entropy = weights_array_vector[4]
+                    writer.writerow([stat[0], stat[1],
+                                     stat[2], 'Set - '+str(cross_fold),  accuracy, epochs, bias, Variance, Skewness, Kurtosis, Entropy])
