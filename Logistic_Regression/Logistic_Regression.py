@@ -218,12 +218,12 @@ class Logistic_Regression:
     def k_fold_cross_validation(self, X, folds, learning_rate):
         """
         Takes in the Normalized array and number of k-values needed and the number of folds needed.
-        The function would iterate over all the fold partitions except the fold in enumeration 
-        and get the other folds and call the knn algorithm those many times to get the accuracy. 
+        The function would iterate over all the fold partitions except the fold in enumeration
+        and get the other folds and call the knn algorithm those many times to get the accuracy.
         The returned accuracy is the mean of the individual fold accuracies and also a list of predicted labels
         which would be used in the Classification report
         :X: Train Data set which is a nd array object normalized.
-        :k: k-value. 
+        :k: k-value.
         :folds: number of folds for which knn needs to be done.
         :return: accuracy of this iteration and list of predicted outputs
         """
@@ -241,8 +241,8 @@ class Logistic_Regression:
             accuracy_for_cross_validation, actual_predicted_labels_from_partition, theta, epochs, error_rates = self.trainandTest(
                 train_data_set, cross_validation_dataset, learning_rate)
             print(f'Thetha is : {theta}')
-            print(f'Error rate length : {len(error_rates)}')
-            print(f'Error Rates : {error_rates}')
+            # print(f'Error rate length : {len(error_rates)}')
+            # print(f'Error Rates : {error_rates}')
             weights_accuracy_vector.append(
                 (index, accuracy_for_cross_validation, theta, epochs, error_rates))
             accuracy_listing.append(accuracy_for_cross_validation)
@@ -282,6 +282,22 @@ class Logistic_Regression:
         print('Statistics')
         # print(self.statistics)
         self.print_statistics(self.statistics)
+        self.print_Error_Rate(self.statistics)
+
+    def print_Error_Rate(self, statistic):
+        with open('report/data/error_rate.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                ["learning_Rate", "Cross_Validation_Fold", "Epochs", "index", "Error_Rate"])
+            for index, stat in enumerate(statistic):
+                for index2, weight_vector in enumerate(stat[6]):
+                    epochs = weight_vector[3]
+                    error_rate = weight_vector[4]
+                    cross_fold = 'Set - '+str(weight_vector[0])
+                    learning_Rate = stat[2]
+                    for index, error in enumerate(error_rate):
+                        writer.writerow(
+                            [learning_Rate, cross_fold, epochs, index, error])
 
     def print_statistics(self, statistics):
         """
@@ -298,6 +314,9 @@ class Logistic_Regression:
                         len(weight_vector[2]))
                     accuracy = weight_vector[1]
                     epochs = weight_vector[3]
+                    print('Kartik')
+                    error_rate = weight_vector[4]
+                    print(error_rate)
                     cross_fold = weight_vector[0]
                     bias = weights_array_vector[0]
                     Variance = weights_array_vector[1]
