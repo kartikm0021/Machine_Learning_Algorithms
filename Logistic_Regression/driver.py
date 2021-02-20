@@ -1,5 +1,8 @@
 import Logistic_Regression as logistic
 import numpy as np
+from sklearn.metrics import roc_curve
+from matplotlib import pyplot
+
 
 data_file_name = 'data/data_banknote_authentication.txt'
 # data_file_name = 'supporting_files/shuffled.data'
@@ -15,13 +18,20 @@ theta = np.zeros((data.shape[1]-1, 1))
 error = classifier.errCompute(data, theta)
 print(f'Test Error is {error}')
 
-theta = classifier.stochasticMiniBatchGradientDescent(
+theta = classifier.stochasticGD(
     data, theta, 0.01, 1372*20)
 y_prediction_cls, accuracy = classifier.predict(data, theta)
 print(accuracy)
 print(theta)
 
-
+# y = data[:, -1]
+# fpr, tpr, _ = roc_curve(y, y_prediction_cls)
+# pyplot.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
+# pyplot.plot(fpr, tpr, marker='.', label='Logistic')
+# pyplot.xlabel('False Positive Rate')
+# pyplot.ylabel('True Positive Rate')
+# pyplot.legend()
+# pyplot.show()
 # K Fold cross validation
 print('Starting k fold cross validation')
 classifier.trigger_k_fold_cross_validation(base_data)

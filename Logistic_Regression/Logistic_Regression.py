@@ -1,6 +1,8 @@
 import numpy as np
 import csv
 import time
+from sklearn.metrics import roc_curve
+from matplotlib import pyplot
 
 
 class Logistic_Regression:
@@ -11,10 +13,16 @@ class Logistic_Regression:
         self.train_percentages = [0.6]
         self.cross_fold_values = [5]
         # self.learning_rates = [.01, .02, .03, 1, 2, 3, 4, 5]
-        self.learning_rates = [.1, .2, .3, .4, 1, 2, 3]
+        self.learning_rates = [.1, .2, .3, .4, 1]
         self.statistics = []
 
     def dataLoad(self, fileName):
+        """
+        dataLoad loads data from filename provided into a numpy array X and returns it.
+
+        :filename filename: File name to be loaded to a numpy nd array object.
+        :return: numpy array object containing the entire data set
+        """
         print(f'Loading file {fileName}')
         data = np.genfromtxt(
             self.fileName, delimiter=',')
@@ -74,9 +82,20 @@ class Logistic_Regression:
             print(format_row.format('', *row))
 
     def sigmoid(self, z):
+        """
+        Calculate sigmoid on the WX values(x@weights).
+        :z: predicted values.
+        :return: sigmoid values
+        """
         return 1 / (1 + np.exp(-z))
 
     def errCompute(self, X, weights):
+        """
+        Function for calculating the convergence during the gradient descent
+        :x: input data set.
+        :weights: weights on which the error has to be calculated
+        :return: return the error rate values
+        """
         weights = weights.reshape(len(weights))
         x = X[:, :-1]
         y = X[:, -1]
@@ -90,6 +109,12 @@ class Logistic_Regression:
         return summation
 
     def fit(self, X, learning_rate, epoch):
+        """
+        Function for fitting the data points with learning rate and epoch
+        :x: input data set.
+        :weights: weights
+        :epoch: number of times the data is parsed.
+        """
         n_samples, n_features = X.shape
         self.weights = np.zeros(n_features)
         x = X[:, :-1]
@@ -103,6 +128,12 @@ class Logistic_Regression:
             self.weights -= learning_rate * dw
 
     def gradient_descent(self, X, learning_rate):
+        """
+        Function for gradient fitting weights on the input data set
+        :x: input data set.
+        :learning_rate: learning rate
+        :return: setting the weights
+        """
         n_samples, n_features = X.shape
         x = X[:, :-1]
         y = X[:, -1]
@@ -113,6 +144,12 @@ class Logistic_Regression:
         self.weights -= learning_rate * dw
 
     def predict(self, X, weight):
+        """
+        Function for predicting the y values given a set of weights
+        :x: input data set.
+        :weight: weights
+        :return: predicted y values and accuracy value
+        """
         weight = weight.reshape(len(weight))
         x = X[:, :-1]
         y = X[:, -1]
@@ -123,10 +160,16 @@ class Logistic_Regression:
         return y_prediction_cls, accuracy
 
     def accuracy(self, y_true, y_prediction):
+        """
+        Function for calculating the accuracy given y true values and y prediction values
+        :y_true: y true values.
+        :y_prediction: y prediction values
+        :return:accuracy values
+        """
         accuracy = np.sum(y_true == y_prediction) / len(y_true)
         return accuracy
 
-    def stochasticGD(self, X, weights, learning_rate, epoch):
+    def stochasticGD1(self, X, weights, learning_rate, epoch):
         weights = weights.reshape(len(weights))
         previous_loss = -float('inf')
         n_samples, n_features = X.shape
@@ -148,13 +191,49 @@ class Logistic_Regression:
         print(f"Number of runs {number_of_runs}")
         return self.weights.reshape((len(self.weights), 1))
 
-    def stochasticMiniBatchGradientDescent(self, X, weights, learning_rate, max_iter):
+    def stochasticGD(self, X, weights, learning_rate, max_iter, batch_size=300):
+        """
+        This function takes in dataset X_norm (should be shuffled), theta , learning rate alpha , 
+        and maximal iterations num_iters. It returns the learned theta.
+        :X: input feature values.
+        :learning_rate: learning rate alphas value
+        :max_iter: maximum number of iterations which would accomodate the different batch sizes
+        :batch_size: batch sizes after which the weights are re-calibrated
+        :return: weights after doing the descent
+        """
 
         weights = weights.reshape(len(weights))
         self.weights = weights
         previous_loss = -float('inf')
         iterations = 0
-        folds = 200
+        folds = batch_size
+        error_rates = []
+
+        for _ in range(max_iter):
+
+            k_fold_partitions = self.splitCV(X, folds)
+            for index, item in enumerate(k_fold_partitions):
+                self.gradient_descent(item, learning_rate)
+            loss = self.errCompute(X, weights)
+            error_rates.append(loss)
+            if abs(previous_loss - loss) < self.tolerance:
+                # print(f'Within tolerace limit of {self.tolerance}')
+                break
+            else:
+                previous_loss = loss
+            iterations += 1
+        print(f"Number of runs {iterations}")
+        self.iterations = iterations
+        self.error_rates = error_rates
+        return self.weights.reshape((len(self.weights), 1))
+
+    def stochasticGDMiniBatch(self, X, weights, learning_rate, max_iter, batch_size):
+
+        weights = weights.reshape(len(weights))
+        self.weights = weights
+        previous_loss = -float('inf')
+        iterations = 0
+        folds = batch_size
         error_rates = []
 
         for _ in range(max_iter):
@@ -176,11 +255,19 @@ class Logistic_Regression:
         return self.weights.reshape((len(self.weights), 1))
 
     def trainandTest(self, X_Train, X_Test, learning_rate):
+        """
+        Takes in the normalized dataset X_train,X_test and learning rate
+        :X_train: train data set.
+        :X_test: test data set.
+        :learning_rate: Learning Rate.
+        :return: accuracy, prediction classes, weights, epochs and error rates
+        """
+
         classifier = Logistic_Regression("")
         data = classifier.dataNorm(X_Train)
         test_data = classifier.dataNorm(X_Test)
         theta = np.zeros((data.shape[1]-1, 1))
-        theta = classifier.stochasticMiniBatchGradientDescent(
+        theta = classifier.stochasticGD(
             data, theta, learning_rate, len(X_Train)*20)
         epoch = classifier.iterations
         error_rates = classifier.error_rates
@@ -256,6 +343,10 @@ class Logistic_Regression:
         return accuracy_average, actual_predicted_labels, weights_accuracy_vector
 
     def trigger_k_fold_cross_validation(self, X):
+        """
+        Trigger the train and given the input data set 
+        :X: Train Data set which is a nd array object normalized.
+        """
         for train_percentage in self.train_percentages:
             print('*'*20)
             print(f' Training with {train_percentage*100} % data')
@@ -283,9 +374,27 @@ class Logistic_Regression:
         # print(self.statistics)
         self.print_statistics(self.statistics)
         self.print_Error_Rate(self.statistics)
+        selected_weights = self.get_weights_for_final_testing(
+            self.statistics, 1)
+        # self.draw_roc_curve(x_test, selected_weights)
+
+    def draw_roc_curve(self, test_data, theta):
+        classifier = Logistic_Regression("")
+        y_prediction_cls, accuracy = classifier.predict(test_data, theta)
+        y = test_data[:, -1]
+        fpr, tpr, _ = roc_curve(y, y_prediction_cls)
+        pyplot.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
+        pyplot.plot(fpr, tpr, marker='.', label='Logistic')
+        pyplot.xlabel('False Positive Rate')
+        pyplot.ylabel('True Positive Rate')
+        # show the legend
+        pyplot.legend()
+        # show the plot
+        pyplot.show()
+        pass
 
     def print_Error_Rate(self, statistic):
-        with open('report/data/error_rate.csv', 'w', newline='') as file:
+        with open('report/output/error_rate.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(
                 ["learning_Rate", "Cross_Validation_Fold", "Epochs", "index", "Error_Rate"])
@@ -299,12 +408,25 @@ class Logistic_Regression:
                         writer.writerow(
                             [learning_Rate, cross_fold, epochs, index, error])
 
+    def get_weights_for_final_testing(self, statistics, learning_rate):
+        for index, stat in enumerate(statistics):
+            for index2, weight_vector in enumerate(stat[6]):
+                weights_array_vector = weight_vector[2].reshape(
+                    len(weight_vector[2]))
+
+                cross_fold = weight_vector[0]
+                lrate = stat[2]
+
+                if cross_fold == 0 and lrate == learning_rate:
+                    choosen_weight = weight_vector[2]
+                    return choosen_weight
+
     def print_statistics(self, statistics):
         """
         Print the statistics to be used for subsequent analysis in jupyter notebook for drawing charts.
         :statistics: nd array of tuples.
         """
-        with open('report/data/statistics.csv', 'w', newline='') as file:
+        with open('report/output/statistics.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(["Method", "Train_Percentage",
                              "learning_Rate", "Cross_Validation_Fold", "Accuracy", "Epochs", "Bias", "Variance", "Skewness", "Kurtosis", "Entropy"])
@@ -314,7 +436,6 @@ class Logistic_Regression:
                         len(weight_vector[2]))
                     accuracy = weight_vector[1]
                     epochs = weight_vector[3]
-                    print('Kartik')
                     error_rate = weight_vector[4]
                     print(error_rate)
                     cross_fold = weight_vector[0]
