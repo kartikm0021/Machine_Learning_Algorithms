@@ -19,14 +19,14 @@ print(x_test.shape)
 X = x_train[:, :-1]
 Y = x_train[:, -1]
 
-our_regressor = classifier(X, Y).fit()
-our_train_accuracy = our_regressor.score()
+regressor = classifier(X, Y).model()
+our_train_accuracy = regressor.accuracy()
 
 print(our_train_accuracy)
 
 X = x_test[:, :-1]
 Y = x_test[:, -1]
-our_test_accuracy = our_regressor.score(X, Y)
+our_test_accuracy = regressor.accuracy(X, Y)
 print(our_test_accuracy)
 
 # y_pred = our_regressor.predict(X)
