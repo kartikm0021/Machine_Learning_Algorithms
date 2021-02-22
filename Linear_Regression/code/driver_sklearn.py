@@ -23,13 +23,13 @@ X = x_train[:, :-1]
 Y = x_train[:, -1]
 
 regressor = classifier(X, Y).model()
-our_train_accuracy = regressor.accuracy()
+our_train_accuracy, rmse = regressor.accuracy()
 
 print(our_train_accuracy)
 
 X = x_test[:, :-1]
 Y = x_test[:, -1]
-our_test_accuracy = regressor.accuracy(X, Y)
+our_test_accuracy, rmse = regressor.accuracy(X, Y)
 print(our_test_accuracy)
 
 # y_pred = our_regressor.predict(X)

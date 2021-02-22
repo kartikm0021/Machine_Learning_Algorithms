@@ -2,7 +2,7 @@ import numpy as np
 import csv
 import time
 from sklearn.metrics import roc_curve
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 # np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -82,8 +82,14 @@ class Linear_Regression:
 
         y_pred = X @ self.weights
         score = self.calculate_coeeficient_r2_score(y, y_pred)
+        rmse = self.calculateRmse(y, y_pred)
 
-        return score
+        return score, rmse
+
+    def calculateRmse(self, y_true, y_pred):
+        n = len(y_true)
+        rmse = np.sqrt(((y_true - y_pred)**2).sum()/n)
+        return rmse
 
     def calculate_coeeficient_r2_score(self, y_true, y_pred):
         score = 1 - (((y_true - y_pred)**2).sum() /
@@ -141,19 +147,20 @@ class Linear_Regression:
         X = X_Train[:, :-1]
         Y = X_Train[:, -1]
         regressor = Linear_Regression(X, Y, alpha=learning_rate).model()
-        train_accuracy = regressor.accuracy()
+        train_accuracy, rmse_score = regressor.accuracy()
         # print(train_accuracy)
 
         test_X = X_Test[:, :-1]
         test_Y = X_Test[:, -1]
 
-        test_accuracy_score = regressor.accuracy(test_X, test_Y)
+        test_accuracy_score, rmse_score = regressor.accuracy(test_X, test_Y)
         # print(test_accuracy_score)
+        # print(rmse_score)
 
         y_prediction_value = regressor.predict(X)
         weights = regressor.get_weights()
 
-        return y_prediction_value, weights, test_accuracy_score
+        return y_prediction_value, weights, test_accuracy_score, rmse_score
 
     def k_fold_cross_validation(self, X, folds, learning_rate):
         """
@@ -170,6 +177,7 @@ class Linear_Regression:
         thetas = []
         weights_accuracy_vector = []
         accuracy_listing = []
+        rmse_score_listing = []
         k_fold_partitions = self.splitCV(X, folds)
         for index, item in enumerate(k_fold_partitions):
             cross_validation_dataset = item
@@ -178,7 +186,7 @@ class Linear_Regression:
             total_train_list = list_of_items_from_zero_to_index + \
                 list_of_items_from_index_to_end
             train_data_set = np.vstack(total_train_list)
-            y_prediction_value, theta, accuracy_score = self.trainandTest(
+            y_prediction_value, theta, accuracy_score, rmse_score = self.trainandTest(
                 train_data_set, cross_validation_dataset, learning_rate)
             # print(f'Thetha is : {theta}')
             thetas.append(theta)
@@ -186,8 +194,12 @@ class Linear_Regression:
                 (index, accuracy_score, theta, learning_rate, cross_validation_dataset, y_prediction_value))
             if accuracy_score is not np.nan:
                 accuracy_listing.append(accuracy_score)
+            if rmse_score is not np.nan:
+                rmse_score_listing.append(rmse_score)
+
         print(f'Accuracy Listing {accuracy_listing}')
         accuracy_average = np.average(accuracy_listing)
+        rmse_average = np.average(rmse_score_listing)
 
         # print(
         #     f'Folds : {folds}, Accuracy Average : {accuracy_average} ')
@@ -196,11 +208,11 @@ class Linear_Regression:
         average_thetha = np.array(thetas).mean(axis=0)
         # print(f'Thetha for {folds} is')
         # print(average_thetha)
-        return accuracy_average, weights_accuracy_vector, average_thetha
+        return accuracy_average, weights_accuracy_vector, average_thetha, rmse_average
 
     def trigger_k_fold_cross_validation(self, X):
         """
-        Trigger the train and given the input data set 
+        Trigger the train and given the input data set
         :X: Train Data set which is a nd array object normalized.
         """
         for train_percentage in self.train_percentages:
@@ -212,11 +224,16 @@ class Linear_Regression:
             for cross_fold in self.cross_fold_values:
                 for learning_rate in self.learning_rates:
                     tic = time.perf_counter()
-                    accuracy_cross_fold, weights_accuracy_vector, average_thetha = self.k_fold_cross_validation(
+                    accuracy_cross_fold, weights_accuracy_vector, average_thetha, rmse_average = self.k_fold_cross_validation(
                         x_train, cross_fold, learning_rate)
                     print(
-                        f'For Cross Fold :{cross_fold} the average accuracy is {accuracy_cross_fold} ')
+                        f'For Cross Fold :{cross_fold} the average accuracy is {accuracy_cross_fold} and average rmse values is {rmse_average} ')
                     print(average_thetha)
+                    y_true, y_prediction = self.calculateTestValueGivenWeights(
+                        x_test, learning_rate, average_thetha)
+                    self.plot_charts(y_true, y_prediction,
+                                     cross_fold, accuracy_cross_fold, rmse_average)
+
                     toc = time.perf_counter()
                     time_taken = toc - tic
                     accuracy_listing.append(accuracy_cross_fold)
@@ -232,6 +249,39 @@ class Linear_Regression:
         print('Statistics')
         # print(self.statistics)
         return self.statistics
+
+    def calculateTestValueGivenWeights(self, test, learning_rate, weight):
+        # print('Inside calculateTestValueGivenWeights')
+        X = test[:, :-1]
+        Y = test[:, -1]
+
+        regressor = Linear_Regression(X, Y, alpha=learning_rate)
+        regressor.weights = weight
+        y_prediction = regressor.predict(X)
+        # print(y_prediction)
+        return (Y, y_prediction)
+
+    def plot_charts(self, true_value, predicted_value, cross_fold, accuracy_average, rmse_average):
+        plt.figure(figsize=(10, 10))
+        plt.scatter(true_value, predicted_value, c='crimson')
+        # plt.yscale('log')
+        # plt.xscale('log')
+
+        p1 = max(max(predicted_value), max(true_value))
+        p2 = min(min(predicted_value), min(true_value))
+        plt.plot([p1, p2], [p1, p2], 'b-')
+        plt.xlabel('True Values', fontsize=15)
+        plt.ylabel('Predictions', fontsize=15)
+
+        accuracy_str = "{:.2f}".format(accuracy_average*100)+'%'
+
+        rmse_str = "{:.2f}".format(rmse_average)
+
+        title = f'Plot for Cross Fold :{cross_fold} with an R2 Square measure : {accuracy_str} and RMSE Average ; {rmse_str}'
+        plt.title(title)
+        image_name = f'img/{cross_fold}_fold.png'
+        plt.savefig(image_name)
+        # plt.show()
 
 
 # https://towardsdatascience.com/linear-regression-from-scratch-with-numpy-implementation-finally-8e617d8e274c
