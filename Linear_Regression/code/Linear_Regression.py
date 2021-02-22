@@ -10,8 +10,8 @@ class Linear_Regression:
     def __init__(self, X, y, alpha=0.01, iterations=200000):
 
         self.train_percentages = [0.7]
-        self.cross_fold_values = [15]
-        self.learning_rates = [.001]
+        self.cross_fold_values = [5, 10, 15]
+        self.learning_rates = [.01]
         self.statistics = []
         self.alpha = alpha
         self.iterations = iterations
@@ -167,6 +167,7 @@ class Linear_Regression:
         :folds: number of folds for which knn needs to be done.
         :return: accuracy of this iteration and list of predicted outputs
         """
+        thetas = []
         weights_accuracy_vector = []
         accuracy_listing = []
         k_fold_partitions = self.splitCV(X, folds)
@@ -180,6 +181,7 @@ class Linear_Regression:
             y_prediction_value, theta, accuracy_score = self.trainandTest(
                 train_data_set, cross_validation_dataset, learning_rate)
             # print(f'Thetha is : {theta}')
+            thetas.append(theta)
             weights_accuracy_vector.append(
                 (index, accuracy_score, theta, learning_rate, cross_validation_dataset, y_prediction_value))
             if accuracy_score is not np.nan:
@@ -187,9 +189,14 @@ class Linear_Regression:
         print(f'Accuracy Listing {accuracy_listing}')
         accuracy_average = np.average(accuracy_listing)
 
-        print(
-            f'Folds : {folds}, Accuracy Average : {accuracy_average} ')
-        return accuracy_average, weights_accuracy_vector
+        # print(
+        #     f'Folds : {folds}, Accuracy Average : {accuracy_average} ')
+        # # print(f'Weights for {folds}')
+        # print(thetas)
+        average_thetha = np.array(thetas).mean(axis=0)
+        # print(f'Thetha for {folds} is')
+        # print(average_thetha)
+        return accuracy_average, weights_accuracy_vector, average_thetha
 
     def trigger_k_fold_cross_validation(self, X):
         """
@@ -205,13 +212,16 @@ class Linear_Regression:
             for cross_fold in self.cross_fold_values:
                 for learning_rate in self.learning_rates:
                     tic = time.perf_counter()
-                    accuracy_cross_fold, weights_accuracy_vector = self.k_fold_cross_validation(
+                    accuracy_cross_fold, weights_accuracy_vector, average_thetha = self.k_fold_cross_validation(
                         x_train, cross_fold, learning_rate)
+                    print(
+                        f'For Cross Fold :{cross_fold} the average accuracy is {accuracy_cross_fold} ')
+                    print(average_thetha)
                     toc = time.perf_counter()
                     time_taken = toc - tic
                     accuracy_listing.append(accuracy_cross_fold)
                     datapoint = ('Linear Regression', train_percentage *
-                                 100, learning_rate, cross_fold, accuracy_cross_fold, time_taken, weights_accuracy_vector)
+                                 100, learning_rate, cross_fold, accuracy_cross_fold, time_taken, weights_accuracy_vector, average_thetha)
                     self.statistics.append((datapoint))
 
             average_accuracy_score = np.mean(accuracy_listing)
