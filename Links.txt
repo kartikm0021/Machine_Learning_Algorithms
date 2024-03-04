@@ -1,0 +1,52 @@
+Day1
+# Links and resources
+## Intro
+Intro Session: [LINK](https://tldv.io/app/meetings/65e09b7d9f0b49001380b06d)
+## Day 1
+Cohort 5:Day 1 - Part 1: [LINK](https://tldv.io/app/meetings/65e1a7302f8f7a001316ce02)
+Cohort 5:Day 1 - Part 2: [LINK](https://tldv.io/app/meetings/65e1cfe8e9a65800139c595e)
+## Day 2
+Cohort 5:Day 2 - Part 1: [LINK](https://tldv.io/app/meetings/65e28ec6893d32001309fcb3)
+Cohort 5:Day 2 - Part 2: [LINK](https://tldv.io/app/meetings/65e2b24e2bb36d001326ccfd)
+Cohort 5:Day 2 - Part 3: [LINK](https://tldv.io/app/meetings/65e2db4b86a35a0013692d4a)
+Cohort 5:Day 2 - Part 4: [LINK](https://tldv.io/app/meetings/65e2eecb86a35a0013693596)
+## Day 3
+Cohort 5:Day 3 - Part 1: [LINK](https://tldv.io/app/meetings/65e3e048fbd89b0013f0c391)
+Cohort 5:Day 3 - Part 2: [LINK](https://tldv.io/app/meetings/65e404d5fbd89b0013f0c7b5)
+Cohort 5:Day 3 - Part 3: [LINK](https://tldv.io/app/meetings/65e4302386a35a00136972d3)
+Cohort 5:Day 3 - Part 4: [LINK](https://tldv.io/app/meetings/65e457f946fdd100139187f2)
+## Master Notebook(syllabus)
+The main syllabus notebook: [Modern AI Pro: Bootcamp 5](https://tinyurl.com/modernaiprov5)
+## Detailed Video Resources
+The detailed video resources can be accessed in this channel: <#1129730122761646131>
+
+
+
+
+Detailed Bootcamp Video links:
+
+Intro session: https://tldv.io/app/meetings/64fb21d26fd8fd0013872388
+
+Lecture 1: https://tldv.io/app/meetings/65045c3918364000138188e6
+
+Lecture 2: https://tldv.io/app/meetings/6505add9aeab9a00140620a0
+
+Lecture 3: https://tldv.io/app/meetings/6506ff74554c340013b6ca84
+
+Lecture 4: https://tldv.io/app/meetings/650d96e713527d001371db3a
+
+Lecture 5: https://tldv.io/app/meetings/650ee8c013527d001372dde7
+
+Lecture 6: https://tldv.io/app/meetings/65103b8f7eae820013d4f876
+
+Lecture 7: https://tldv.io/app/meetings/6516d17ad453510013958b6d
+
+Lecture 8: https://tldv.io/app/meetings/6518231c74e86d0013b3b3cb
+
+Lecture 9: https://tldv.io/app/meetings/6519747143084f0013d489ac
+
+Lecture 10: https://tldv.io/app/meetings/65200bc2da618a00136ec50c
+
+Lecture 11: https://tldv.io/app/meetings/65215ecdda618a00136f1eb7
+
+Lecture 12: https://tldv.io/app/meetings/6522aeec4a1c8b00134c6a60
